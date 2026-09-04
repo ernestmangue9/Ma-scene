@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: concert-alert
+    runtime: node
+    buildCommand: npm install
+    startCommand: node server.js
+    autoDeploy: true
+    envVars:
+      - key: SPOTIFY_CLIENT_ID
+        sync: false
+      - key: SPOTIFY_CLIENT_SECRET
+        sync: false
+      - key: REDIRECT_URI
+        sync: false
+      - key: USER_COUNTRY
+        value: France
+      - key: USER_CITY
+        value: Paris
+      - key: USE_HTTPS
+        value: "false"

@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html class="dark" lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Concert Alert</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Epilogue:ital,wght@0,600;0,700;0,800;1,700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "on-secondary": "#333116",
+            "on-surface": "#e7e0e6",
+            "surface-dim": "#151317",
+            "tertiary-fixed-dim": "#ffb77a",
+            "primary-fixed": "#ffdad5",
+            "secondary-fixed-dim": "#ccc8a2",
+            "on-primary": "#690003",
+            "on-primary-fixed-variant": "#930007",
+            "on-error": "#690005",
+            "tertiary-container": "#d37b20",
+            "on-secondary-container": "#bab691",
+            "on-tertiary": "#4c2700",
+            "on-secondary-fixed-variant": "#4a482a",
+            "surface-container-low": "#1d1b1f",
+            "on-tertiary-fixed": "#2e1500",
+            "on-error-container": "#ffdad6",
+            "on-primary-fixed": "#410001",
+            "surface": "#151317",
+            "surface-container-lowest": "#0f0d11",
+            "tertiary-fixed": "#ffdcc2",
+            "surface-tint": "#ffb4aa",
+            "error": "#ffb4ab",
+            "primary-fixed-dim": "#ffb4aa",
+            "outline": "#ab8984",
+            "inverse-primary": "#ba1b18",
+            "on-secondary-fixed": "#1e1c04",
+            "surface-variant": "#373438",
+            "on-tertiary-fixed-variant": "#6d3a00",
+            "background": "#151317",
+            "surface-bright": "#3b383d",
+            "on-tertiary-container": "#432100",
+            "on-background": "#e7e0e6",
+            "primary": "#ffb4aa",
+            "tertiary": "#ffb77a",
+            "error-container": "#93000a",
+            "secondary-container": "#4a482a",
+            "secondary": "#ccc8a2",
+            "surface-container-high": "#2c292d",
+            "surface-container-highest": "#373438",
+            "surface-container": "#211f23",
+            "inverse-on-surface": "#322f34",
+            "primary-container": "#ff5447",
+            "outline-variant": "#5b403c",
+            "inverse-surface": "#e7e0e6",
+            "secondary-fixed": "#e9e4bc",
+            "on-surface-variant": "#e4beb9",
+            "on-primary-container": "#5c0003"
+          },
+          "borderRadius": {
+            "DEFAULT": "1rem",
+            "lg": "2rem",
+            "xl": "3rem",
+            "full": "9999px"
+          },
+          "spacing": {
+            "space-lg": "1.5rem",
+            "space-3xl": "4rem",
+            "gutter-desktop": "2rem",
+            "sidebar-width-collapsed": "5rem",
+            "space-sm": "0.75rem",
+            "space-xl": "2rem",
+            "space-xxs": "0.25rem",
+            "space-xs": "0.5rem",
+            "gutter-tablet": "1.5rem",
+            "space-md": "1rem",
+            "sidebar-width-desktop": "16.5rem",
+            "space-2xl": "3rem",
+            "space-3xl": "4rem",
+            "player-height-mobile": "4.25rem",
+            "gutter-mobile": "1rem",
+            "player-height-desktop": "5.5rem"
+          },
+          "fontFamily": {
+            "headline-xl": ["epilogue"],
+            "headline-sm": ["epilogue"],
+            "headline-lg": ["epilogue"],
+            "headline-md": ["epilogue"],
+            "body-sm": ["plusJakartaSans"],
+            "body-lg": ["plusJakartaSans"],
+            "label-sm": ["plusJakartaSans"],
+            "body-md": ["plusJakartaSans"],
+            "label-md": ["plusJakartaSans"],
+            "label-lg": ["plusJakartaSans"]
+          },
+          "fontSize": {
+            "headline-xl": ["56px", {"lineHeight": "64px", "letterSpacing": "-0.03em", "fontWeight": "800"}],
+            "headline-sm": ["22px", {"lineHeight": "28px", "letterSpacing": "0em", "fontWeight": "600"}],
+            "headline-lg": ["40px", {"lineHeight": "48px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+            "headline-md": ["28px", {"lineHeight": "36px", "letterSpacing": "-0.01em", "fontWeight": "700"}],
+            "body-sm": ["13px", {"lineHeight": "18px", "letterSpacing": "0.01em", "fontWeight": "400"}],
+            "body-lg": ["18px", {"lineHeight": "28px", "letterSpacing": "-0.01em", "fontWeight": "500"}],
+            "label-sm": ["11px", {"lineHeight": "14px", "letterSpacing": "0.04em", "fontWeight": "700"}],
+            "body-md": ["15px", {"lineHeight": "22px", "letterSpacing": "0em", "fontWeight": "400"}],
+            "label-md": ["12px", {"lineHeight": "16px", "letterSpacing": "0.03em", "fontWeight": "600"}],
+            "label-lg": ["14px", {"lineHeight": "20px", "letterSpacing": "0.02em", "fontWeight": "700"}]
+          }
+        }
+      }
+    };
+  </script>
+  <style>
+    @layer base { html, body { margin: 0; padding: 0; } body { overscroll-behavior: none; } }
+    ::-webkit-scrollbar { display: none; }
+    .nav-link.active { background: #ff5447; color: #fff; font-weight: 700; box-shadow: 0 8px 24px rgba(255,79,66,0.35); }
+    .nav-link { transition: all 0.2s; }
+    .nav-link:hover { background: #2c292d; color: #e7e0e6; }
+    .nav-link.active:hover { background: #ff5447; color: #fff; }
+    .hero-glow-1 { position: absolute; top: -10rem; left: -10rem; width: 24rem; height: 24rem; border-radius: 50%; background: rgba(255,79,66,0.08); filter: blur(120px); pointer-events: none; }
+    .hero-glow-2 { position: absolute; top: 33%; right: -10rem; width: 24rem; height: 24rem; border-radius: 50%; background: rgba(255,183,122,0.08); filter: blur(140px); pointer-events: none; }
+    .hero-glow-3 { position: absolute; bottom: -5rem; left: 33%; width: 30rem; height: 30rem; border-radius: 50%; background: rgba(255,79,66,0.06); filter: blur(160px); pointer-events: none; }
+    .concert-card { transition: all 0.2s; }
+    .concert-card:hover { border-color: #ff5447; transform: translateY(-1px); box-shadow: 0 8px 24px rgba(0,0,0,0.3); }
+    .artist-bubble { transition: all 0.3s; }
+    .artist-bubble:hover { transform: scale(1.05); }
+    .pill { transition: all 0.3s; }
+    .pill.active { background: #e9e4bc; color: #1e1c04; transform: scale(1.05); box-shadow: 0 4px 16px rgba(233,228,188,0.2); }
+    .pill:not(.active):hover { background: #373438; color: #e7e0e6; }
+    @keyframes pulse-bar { 0%,100% { height: 100%; } 50% { height: 40%; } }
+    .eq-bar { animation: pulse-bar 0.7s ease-in-out infinite; }
+    .eq-bar:nth-child(2) { animation-duration: 0.5s; }
+    .eq-bar:nth-child(3) { animation-duration: 0.9s; }
+    .fade-in { animation: fadeIn 0.3s ease; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  </style>
+</head>
+<body class="bg-background font-body-md text-body-md text-on-surface min-h-screen relative selection:bg-primary selection:text-on-primary">
+
+  <!-- Background Glows -->
+  <div class="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+    <div class="hero-glow-1"></div>
+    <div class="hero-glow-2"></div>
+    <div class="hero-glow-3"></div>
+  </div>
+
+  <!-- ═══════ SIDEBAR ═══════ -->
+  <aside id="sidebar" class="fixed left-0 top-0 h-full w-sidebar-width-desktop bg-surface-container-low/75 backdrop-blur-2xl z-40 flex flex-col p-space-md shadow-[0_1px_8px_rgba(0,0,0,0.4)]">
+    <div class="flex items-center gap-space-xs px-space-sm py-space-md mb-space-lg">
+      <div class="w-10 h-10 rounded-full bg-primary-container flex items-center justify-center shadow-[0_8px_24px_rgba(255,79,66,0.35)]">
+        <span class="material-symbols-outlined text-on-primary font-headline-md text-headline-md">graphic_eq</span>
+      </div>
+      <div class="flex flex-col">
+        <span class="font-headline-sm text-headline-sm text-on-surface tracking-tight">Concert</span>
+        <span class="font-label-sm text-label-sm text-tertiary uppercase tracking-widest">Alert</span>
+      </div>
+    </div>
+    <nav class="flex flex-col gap-space-xs flex-1" id="nav-links">
+      <a class="nav-link flex items-center gap-space-sm px-space-md py-space-sm rounded-full text-on-surface-variant" data-page="home" href="#">
+        <span class="material-symbols-outlined">home</span>
+        <span class="font-label-lg text-label-lg">Accueil</span>
+      </a>
+      <a class="nav-link flex items-center gap-space-sm px-space-md py-space-sm rounded-full text-on-surface-variant" data-page="artists" href="#">
+        <span class="material-symbols-outlined">explore</span>
+        <span class="font-label-lg text-label-lg">Mes Artistes</span>
+      </a>
+      <a class="nav-link flex items-center gap-space-sm px-space-md py-space-sm rounded-full text-on-surface-variant" data-page="concerts" href="#">
+        <span class="material-symbols-outlined">celebration</span>
+        <span class="font-label-lg text-label-lg">Concerts</span>
+      </a>
+      <a class="nav-link flex items-center gap-space-sm px-space-md py-space-sm rounded-full text-on-surface-variant" data-page="favorites" href="#">
+        <span class="material-symbols-outlined">favorite</span>
+        <span class="font-label-lg text-label-lg">Favoris</span>
+      </a>
+      <a class="nav-link flex items-center gap-space-sm px-space-md py-space-sm rounded-full text-on-surface-variant" data-page="settings" href="#">
+        <span class="material-symbols-outlined">settings</span>
+        <span class="font-label-lg text-label-lg">Paramètres</span>
+      </a>
+    </nav>
+    <div class="mt-auto p-space-md rounded-lg bg-surface-container/60 backdrop-blur-md flex flex-col gap-space-xs">
+      <div class="flex items-center gap-space-xs">
+        <span class="w-2 h-2 rounded-full bg-primary-container animate-pulse"></span>
+        <span class="font-label-sm text-label-sm text-secondary">Bandsintown + Ticketmaster</span>
+      </div>
+      <span class="font-label-md text-label-md text-on-surface">Recherche active</span>
+    </div>
+  </aside>
+
+  <!-- ═══════ MAIN CONTENT ═══════ -->
+  <div class="pl-sidebar-width-desktop relative z-10">
+
+    <!-- Header -->
+    <header class="fixed top-0 left-sidebar-width-desktop right-0 h-space-3xl bg-surface/70 backdrop-blur-xl z-30 shadow-[0_1px_8px_rgba(0,0,0,0.3)]">
+      <div class="h-full w-full px-gutter-desktop flex items-center justify-between gap-space-md">
+        <div class="flex-1 max-w-md">
+          <div class="flex items-center bg-surface-container-high/80 rounded-full px-space-md py-space-xs gap-space-xs focus-within:ring-2 focus-within:ring-primary-container transition-all">
+            <span class="material-symbols-outlined text-primary">search</span>
+            <input id="header-search" class="bg-transparent border-none outline-none text-on-surface placeholder:text-outline font-body-sm text-body-sm w-full" placeholder="Rechercher un artiste ou une salle..." type="text"/>
+          </div>
+        </div>
+        <div class="flex items-center gap-space-md">
+          <button id="btn-notifications" class="w-10 h-10 rounded-full bg-surface-container-high/70 flex items-center justify-center text-on-surface-variant hover:bg-surface-container-highest hover:text-on-surface transition-all relative" type="button">
+            <span class="material-symbols-outlined text-[20px]">notifications</span>
+            <span id="notif-dot" class="hidden absolute top-1 right-1 w-2.5 h-2.5 rounded-full bg-primary-container animate-pulse"></span>
+          </button>
+          <div id="user-avatar" class="w-8 h-8 rounded-full bg-surface-container-highest flex items-center justify-center text-on-surface-variant">
+            <span class="material-symbols-outlined text-[18px]">person</span>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Area -->
+    <main class="w-full pt-space-3xl pb-space-3xl px-gutter-desktop min-h-screen">
+
+      <!-- ═══ PAGE: LOGIN / HOME ═══ -->
+      <div id="page-home" class="page">
+        <!-- Hero -->
+        <section class="w-full mb-space-3xl relative">
+          <div class="relative w-full rounded-xl p-space-xl md:p-space-2xl bg-gradient-to-r from-surface-container/90 via-surface-container-high/70 to-surface-container-lowest/80 backdrop-blur-2xl shadow-[0_20px_50px_-10px_rgba(0,0,0,0.7)] overflow-hidden">
+            <div class="absolute -right-16 -top-24 w-96 h-96 rounded-full bg-primary-container/25 blur-3xl pointer-events-none"></div>
+            <div class="absolute right-1/4 -bottom-16 w-80 h-80 rounded-full bg-tertiary/20 blur-3xl pointer-events-none"></div>
+            <div class="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-space-xl">
+              <div class="flex flex-col gap-space-sm max-w-2xl">
+                <div class="inline-flex items-center gap-space-xs w-fit px-space-sm py-space-xxs rounded-full bg-surface-container-highest/80 backdrop-blur-md">
+                  <span class="material-symbols-outlined text-primary-container text-[16px] animate-pulse">all_inclusive</span>
+                  <span class="font-label-sm text-label-sm text-secondary-fixed tracking-wider uppercase">Alerte en temps réel</span>
+                </div>
+                <h2 class="font-headline-xl text-headline-xl tracking-tight text-on-surface">
+                  Ne rate plus <span class="bg-clip-text text-transparent bg-gradient-to-r from-primary-container via-primary to-secondary-fixed">aucun concert</span>
+                </h2>
+                <p class="font-body-lg text-body-lg text-on-surface-variant max-w-xl">
+                  Connecte ton Spotify, on retrouve tes artistes favoris et on te alerte dès qu'un concert est annoncé près de chez toi.
+                </p>
+                <div class="flex flex-wrap items-center gap-space-md pt-space-xs">
+                  <a href="/login" id="btn-connect-spotify" class="group relative flex items-center gap-space-md px-space-xl py-space-md rounded-full bg-primary-container text-on-primary font-label-lg text-label-lg shadow-[0_12px_32px_rgba(255,79,66,0.45)] hover:shadow-[0_16px_40px_rgba(255,79,66,0.65)] hover:scale-105 active:scale-95 transition-all duration-300">
+                    <div class="relative flex items-center justify-center w-9 h-9 rounded-full bg-on-primary/15">
+                      <span class="material-symbols-outlined text-[24px]">music_note</span>
+                    </div>
+                    <span class="font-headline-sm text-headline-sm tracking-normal">Connecter Spotify</span>
+                    <span class="material-symbols-outlined text-[22px] group-hover:translate-x-1 transition-transform">arrow_forward</span>
+                  </a>
+                </div>
+              </div>
+              <!-- Stats Card -->
+              <div class="lg:w-96 shrink-0 relative flex flex-col gap-space-xs p-space-md rounded-lg bg-surface-container-highest/60 backdrop-blur-xl shadow-[0_10px_30px_rgba(0,0,0,0.5)]">
+                <div class="flex items-center justify-between mb-space-xxs">
+                  <span class="font-label-sm text-label-sm text-secondary uppercase tracking-widest">Comment ça marche</span>
+                  <span class="font-label-sm text-label-sm text-primary-container flex items-center gap-1">
+                    <span class="w-1.5 h-1.5 rounded-full bg-primary-container animate-ping"></span>
+                    Simple
+                  </span>
+                </div>
+                <div class="flex items-center gap-space-xs p-space-xs rounded-full bg-surface-container-low/70">
+                  <span class="w-8 h-8 rounded-full bg-primary-container/20 flex items-center justify-center text-primary-container shrink-0">
+                    <span class="material-symbols-outlined text-[16px]">login</span>
+                  </span>
+                  <span class="font-body-sm text-body-sm text-on-surface">1. Connecte ton Spotify</span>
+                </div>
+                <div class="flex items-center gap-space-xs p-space-xs rounded-full bg-surface-container-low/70">
+                  <span class="w-8 h-8 rounded-full bg-tertiary/20 flex items-center justify-center text-tertiary shrink-0">
+                    <span class="material-symbols-outlined text-[16px]">group</span>
+                  </span>
+                  <span class="font-body-sm text-body-sm text-on-surface">2. On détecte tes artistes</span>
+                </div>
+                <div class="flex items-center gap-space-xs p-space-xs rounded-full bg-surface-container-low/70">
+                  <span class="w-8 h-8 rounded-full bg-secondary/20 flex items-center justify-center text-secondary shrink-0">
+                    <span class="material-symbols-outlined text-[16px]">celebration</span>
+                  </span>
+                  <span class="font-body-sm text-body-sm text-on-surface">3. Concerts trouvés !</span>
+                </div>
+                <div class="mt-space-xs pt-space-xs flex items-center justify-between text-secondary">
+                  <span class="font-label-sm text-label-sm">Bandsintown + Ticketmaster</span>
+                  <span class="font-label-sm text-label-sm font-bold text-secondary-fixed">Gratuit</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Quick suggestion chips -->
+        <section class="w-full mb-space-3xl">
+          <div class="flex items-end justify-between mb-space-lg">
+            <div class="flex flex-col">
+              <span class="font-label-sm text-label-sm text-secondary tracking-widest uppercase">Commencer vite</span>
+              <h3 class="font-headline-lg text-headline-lg text-on-surface tracking-tight">Artistes populaires</h3>
+            </div>
+          </div>
+          <div class="flex flex-wrap gap-space-sm" id="home-chips">
+            <button class="pill flex items-center gap-space-xs px-space-lg py-space-xs rounded-full bg-surface-container-high/80 backdrop-blur-md text-on-surface-variant font-label-lg text-label-lg" onclick="addArtistDirect('SCH')">
+              <span class="material-symbols-outlined text-[16px] text-primary">music_note</span>SCH
+            </button>
+            <button class="pill flex items-center gap-space-xs px-space-lg py-space-xs rounded-full bg-surface-container-high/80 backdrop-blur-md text-on-surface-variant font-label-lg text-label-lg" onclick="addArtistDirect('Dua Lipa')">
+              <span class="material-symbols-outlined text-[16px] text-tertiary">music_note</span>Dua Lipa
+            </button>
+            <button class="pill flex items-center gap-space-xs px-space-lg py-space-xs rounded-full bg-surface-container-high/80 backdrop-blur-md text-on-surface-variant font-label-lg text-label-lg" onclick="addArtistDirect('Coldplay')">
+              <span class="material-symbols-outlined text-[16px] text-secondary">music_note</span>Coldplay
+            </button>
+            <button class="pill flex items-center gap-space-xs px-space-lg py-space-xs rounded-full bg-surface-container-high/80 backdrop-blur-md text-on-surface-variant font-label-lg text-label-lg" onclick="addArtistDirect('Damso')">
+              <span class="material-symbols-outlined text-[16px] text-primary-fixed-dim">music_note</span>Damso
+            </button>
+            <button class="pill flex items-center gap-space-xs px-space-lg py-space-xs rounded-full bg-surface-container-high/80 backdrop-blur-md text-on-surface-variant font-label-lg text-label-lg" onclick="addArtistDirect('Jul')">
+              <span class="material-symbols-outlined text-[16px] text-tertiary-fixed">music_note</span>Jul
+            </button>
+            <button class="pill flex items-center gap-space-xs px-space-lg py-space-xs rounded-full bg-surface-container-high/80 backdrop-blur-md text-on-surface-variant font-label-lg text-label-lg" onclick="addArtistDirect('Aya Nakamura')">
+              <span class="material-symbols-outlined text-[16px] text-primary">music_note</span>Aya Nakamura
+            </button>
+            <button class="pill flex items-center gap-space-xs px-space-lg py-space-xs rounded-full bg-surface-container-high/80 backdrop-blur-md text-on-surface-variant font-label-lg text-label-lg" onclick="addArtistDirect("L'Impératrice")">
+              <span class="material-symbols-outlined text-[16px] text-tertiary">music_note</span>L'Impératrice
+            </button>
+            <button class="pill flex items-center gap-space-xs px-space-lg py-space-xs rounded-full bg-surface-container-high/80 backdrop-blur-md text-on-surface-variant font-label-lg text-label-lg" onclick="addArtistDirect('Orelsan')">
+              <span class="material-symbols-outlined text-[16px] text-secondary-fixed">music_note</span>Orelsan
+            </button>
+          </div>
+        </section>
+      </div>
+
+      <!-- ═══ PAGE: ARTISTS ═══ -->
+      <div id="page-artists" class="page hidden">
+        <section class="w-full mb-space-2xl">
+          <div class="flex items-center justify-between mb-space-lg">
+            <div class="flex flex-col">
+              <span class="font-label-sm text-label-sm text-secondary tracking-widest uppercase">Gestion</span>
+              <h3 class="font-headline-lg text-headline-lg text-on-surface tracking-tight">Mes Artistes</h3>
+            </div>
+            <button class="px-space-md py-space-xs rounded-full bg-primary-container text-on-primary font-label-md text-label-md shadow-[0_4px_16px_rgba(255,79,66,0.3)] hover:scale-105 active:scale-95 transition-all" onclick="searchAllConcerts()" id="btn-search-main">
+              <span class="material-symbols-outlined text-[16px] align-middle">search</span> Rechercher les concerts
+            </button>
+          </div>
+
+          <!-- Input -->
+          <div class="flex items-center bg-surface-container-high/80 rounded-full px-space-md py-space-xs gap-space-xs focus-within:ring-2 focus-within:ring-primary-container transition-all mb-space-lg">
+            <span class="material-symbols-outlined text-primary">person_add</span>
+            <input id="artist-input" class="bg-transparent border-none outline-none text-on-surface placeholder:text-outline font-body-sm text-body-sm w-full" placeholder="Ajouter un artiste (ex: SCH, Dua Lipa...)" type="text" onkeydown="if(event.key==='Enter')addArtist()"/>
+            <button onclick="addArtist()" class="font-label-sm text-label-sm text-on-primary bg-primary-container px-space-sm py-space-xxs rounded-full hover:opacity-90 transition-opacity font-bold">+ Ajouter</button>
+          </div>
+
+          <!-- Artist count + clear -->
+          <div class="flex items-center justify-between mb-space-md">
+            <span id="artist-count" class="font-label-md text-label-md text-on-surface-variant"></span>
+            <button onclick="clearAllArtists()" class="flex items-center gap-1 font-label-md text-label-md text-on-surface-variant hover:text-error transition-colors">
+              <span class="material-symbols-outlined text-[16px]">delete</span> Tout supprimer
+            </button>
+          </div>
+
+          <!-- Artist tags -->
+          <div id="artist-tags" class="flex flex-wrap gap-space-xs mb-space-lg"></div>
+
+          <!-- Suggestion chips -->
+          <div class="p-space-lg rounded-xl bg-surface-container-low/85 backdrop-blur-xl shadow-[0_12px_36px_rgba(0,0,0,0.5)]">
+            <div class="flex items-center gap-space-xs mb-space-md">
+              <span class="material-symbols-outlined text-primary-container text-[20px]">auto_awesome</span>
+              <span class="font-label-lg text-label-lg text-on-surface">Suggestions rapides</span>
+            </div>
+            <div class="flex flex-wrap gap-space-xs" id="suggestion-chips">
+              <button class="pill flex items-center gap-space-xs px-space-sm py-space-xxs rounded-full bg-surface-container-highest/80 text-on-surface-variant font-label-md text-label-md" onclick="addArtistDirect('SCH')">SCH</button>
+              <button class="pill flex items-center gap-space-xs px-space-sm py-space-xxs rounded-full bg-surface-container-highest/80 text-on-surface-variant font-label-md text-label-md" onclick="addArtistDirect('Dua Lipa')">Dua Lipa</button>
+              <button class="pill flex items-center gap-space-xs px-space-sm py-space-xxs rounded-full bg-surface-container-highest/80 text-on-surface-variant font-label-md text-label-md" onclick="addArtistDirect('Coldplay')">Coldplay</button>
+              <button class="pill flex items-center gap-space-xs px-space-sm py-space-xxs rounded-full bg-surface-container-highest/80 text-on-surface-variant font-label-md text-label-md" onclick="addArtistDirect('Damso')">Damso</button>
+              <button class="pill flex items-center gap-space-xs px-space-sm py-space-xxs rounded-full bg-surface-container-highest/80 text-on-surface-variant font-label-md text-label-md" onclick="addArtistDirect('Jul')">Jul</button>
+              <button class="pill flex items-center gap-space-xs px-space-sm py-space-xxs rounded-full bg-surface-container-highest/80 text-on-surface-variant font-label-md text-label-md" onclick="addArtistDirect('Aya Nakamura')">Aya Nakamura</button>
+              <button class="pill flex items-center gap-space-xs px-space-sm py-space-xxs rounded-full bg-surface-container-highest/80 text-on-surface-variant font-label-md text-label-md" onclick="addArtistDirect("L'Impératrice")">L'Impératrice</button>
+              <button class="pill flex items-center gap-space-xs px-space-sm py-space-xxs rounded-full bg-surface-container-highest/80 text-on-surface-variant font-label-md text-label-md" onclick="addArtistDirect('Orelsan')">Orelsan</button>
+              <button class="pill flex items-center gap-space-xs px-space-sm py-space-xxs rounded-full bg-surface-container-highest/80 text-on-surface-variant font-label-md text-label-md" onclick="addArtistDirect('Mylène Farmer')">Mylène Farmer</button>
+              <button class="pill flex items-center gap-space-xs px-space-sm py-space-xxs rounded-full bg-surface-container-highest/80 text-on-surface-variant font-label-md text-label-md" onclick="addArtistDirect('Booba')">Booba</button>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <!-- ═══ PAGE: CONCERTS ═══ -->
+      <div id="page-concerts" class="page hidden">
+        <!-- Loading -->
+        <div id="loading-state" class="hidden">
+          <div class="flex flex-col items-center gap-space-md py-space-3xl">
+            <div class="flex items-end gap-1 h-8">
+              <span class="w-1.5 bg-primary-container rounded-full eq-bar h-full"></span>
+              <span class="w-1.5 bg-secondary-fixed rounded-full eq-bar h-2/3"></span>
+              <span class="w-1.5 bg-primary-container rounded-full eq-bar h-5/6"></span>
+            </div>
+            <p id="loading-text" class="font-body-lg text-body-lg text-on-surface-variant">Recherche de concerts...</p>
+            <div class="w-full max-w-sm h-1.5 rounded-full bg-surface-container-highest overflow-hidden">
+              <div id="progress-fill" class="h-full bg-primary-container rounded-full transition-all duration-400" style="width:0%"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Results -->
+        <div id="concerts-results" class="hidden">
+          <div class="flex items-center justify-between mb-space-lg">
+            <div class="flex flex-col">
+              <span class="font-label-sm text-label-sm text-secondary tracking-widest uppercase">Résultats</span>
+              <h3 class="font-headline-lg text-headline-lg text-on-surface tracking-tight">Concerts trouvés</h3>
+              <p id="artist-summary" class="font-body-sm text-body-sm text-on-surface-variant"></p>
+            </div>
+            <div class="flex items-center bg-surface-container-high/80 rounded-full px-space-md py-space-xs gap-space-xs focus-within:ring-2 focus-within:ring-primary-container transition-all">
+              <span class="material-symbols-outlined text-primary">filter_list</span>
+              <input id="filter-input" class="bg-transparent border-none outline-none text-on-surface placeholder:text-outline font-body-sm text-body-sm" placeholder="Filtrer..." type="text" oninput="filterConcerts(this.value)"/>
+            </div>
+          </div>
+
+          <!-- Concert grid -->
+          <div id="concerts-container" class="flex flex-col gap-space-md"></div>
+
+          <!-- Empty state -->
+          <div id="no-concerts" class="hidden">
+            <div class="flex flex-col items-center py-space-3xl text-center">
+              <span class="material-symbols-outlined text-[64px] text-on-surface-variant mb-space-md">concert</span>
+              <h3 class="font-headline-md text-headline-md text-on-surface mb-space-xs">Aucun concert trouvé</h3>
+              <p class="font-body-md text-body-md text-on-surface-variant">On continue de surveiller ! Revérifie plus tard.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Initial state (before search) -->
+        <div id="concerts-empty" class="flex flex-col items-center py-space-3xl text-center">
+          <span class="material-symbols-outlined text-[64px] text-on-surface-variant mb-space-md">celebration</span>
+          <h3 class="font-headline-md text-headline-md text-on-surface mb-space-xs">Pas encore de recherche</h3>
+          <p class="font-body-md text-body-md text-on-surface-variant mb-space-lg">Ajoute des artistes puis lance la recherche pour trouver leurs prochains concerts.</p>
+          <button onclick="navigateTo('artists')" class="px-space-lg py-space-sm rounded-full bg-primary-container text-on-primary font-label-lg text-label-lg shadow-[0_8px_24px_rgba(255,79,66,0.35)] hover:scale-105 active:scale-95 transition-all">
+            <span class="material-symbols-outlined text-[18px] align-middle">person_add</span> Ajouter des artistes
+          </button>
+        </div>
+      </div>
+
+      <!-- ═══ PAGE: FAVORITES ═══ -->
+      <div id="page-favorites" class="page hidden">
+        <section class="w-full mb-space-3xl">
+          <div class="flex flex-col mb-space-lg">
+            <span class="font-label-sm text-label-sm text-secondary tracking-widest uppercase">Collection</span>
+            <h3 class="font-headline-lg text-headline-lg text-on-surface tracking-tight">Mes Favoris</h3>
+            <p class="font-body-sm text-body-sm text-on-surface-variant">Les concerts que tu as mis en favori seront sauvegardés ici.</p>
+          </div>
+          <div id="favorites-container" class="flex flex-col gap-space-md"></div>
+          <div id="favorites-empty" class="flex flex-col items-center py-space-3xl text-center">
+            <span class="material-symbols-outlined text-[64px] text-on-surface-variant mb-space-md">favorite_border</span>
+            <h3 class="font-headline-md text-headline-md text-on-surface mb-space-xs">Aucun favori</h3>
+            <p class="font-body-md text-body-md text-on-surface-variant">Clique sur le coeur d'un concert pour l'ajouter ici.</p>
+          </div>
+        </section>
+      </div>
+
+      <!-- ═══ PAGE: SETTINGS ═══ -->
+      <div id="page-settings" class="page hidden">
+        <section class="w-full max-w-2xl">
+          <div class="flex flex-col mb-space-xl">
+            <span class="font-label-sm text-label-sm text-secondary tracking-widest uppercase">Configuration</span>
+            <h3 class="font-headline-lg text-headline-lg text-on-surface tracking-tight">Paramètres</h3>
+          </div>
+          <div class="flex flex-col gap-space-md">
+            <div class="p-space-lg rounded-xl bg-surface-container-low/85 backdrop-blur-xl">
+              <h4 class="font-headline-sm text-headline-sm text-on-surface mb-space-sm">Spotify</h4>
+              <p class="font-body-sm text-body-sm text-on-surface-variant mb-space-md">Connecte ton compte Spotify pour extraire automatiquement tes artistes favoris depuis tes playlists et tes artistes les plus écoutés.</p>
+              <a href="/login" class="inline-flex items-center gap-space-xs px-space-md py-space-sm rounded-full bg-[#1DB954] text-black font-label-lg text-label-lg hover:opacity-90 transition-opacity">
+                <span class="material-symbols-outlined text-[18px]">login</span> Connecter Spotify
+              </a>
+            </div>
+            <div class="p-space-lg rounded-xl bg-surface-container-low/85 backdrop-blur-xl">
+              <h4 class="font-headline-sm text-headline-sm text-on-surface mb-space-sm">Notifications</h4>
+              <p class="font-body-sm text-body-sm text-on-surface-variant mb-space-md">Reçois des notifications quand un nouveau concert est détecté pour tes artistes favoris.</p>
+              <button id="btn-enable-notif" onclick="requestNotifPermission()" class="inline-flex items-center gap-space-xs px-space-md py-space-sm rounded-full bg-surface-container-highest text-on-surface font-label-lg text-label-lg hover:bg-surface-bright transition-colors">
+                <span class="material-symbols-outlined text-[18px]">notifications_active</span> Activer les notifications
+              </button>
+            </div>
+            <div class="p-space-lg rounded-xl bg-surface-container-low/85 backdrop-blur-xl">
+              <h4 class="font-headline-sm text-headline-sm text-on-surface mb-space-sm">À propos</h4>
+              <p class="font-body-sm text-body-sm text-on-surface-variant">
+                Concert Alert utilise Bandsintown et Ticketmaster pour trouver les concerts de tes artistes favoris.
+                Aucune donnée personnelle n'est stockée côté serveur.
+              </p>
+            </div>
+          </div>
+        </section>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- Toast Container -->
+  <div id="toast-container" class="fixed bottom-space-md right-space-md z-[999] flex flex-col gap-space-xs pointer-events-none"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,52 @@
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { overscroll-behavior: none; }
+::-webkit-scrollbar { display: none; }
+
+/* Concert card hover glow */
+.concert-card {
+  border: 1px solid #2c292d;
+  border-radius: 1rem;
+  background: rgba(33,31,35,0.85);
+  backdrop-filter: blur(12px);
+  transition: all 0.25s;
+}
+.concert-card:hover {
+  border-color: #ff5447;
+  box-shadow: 0 8px 32px rgba(255,79,66,0.12);
+}
+
+/* Favorite heart animation */
+.fav-btn.active .material-symbols-outlined { color: #ff5447; font-variation-settings: 'FILL' 1; }
+.fav-btn .material-symbols-outlined { transition: color 0.2s; }
+
+/* Toast */
+.toast-item {
+  pointer-events: auto;
+  padding: 0.75rem 1rem;
+  background: #2c292d;
+  border: 1px solid #373438;
+  border-radius: 0.75rem;
+  font-size: 0.875rem;
+  color: #e7e0e6;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+  animation: toastIn 0.25s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+@keyframes toastIn { from { transform: translateX(60px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+.toast-close { background: none; border: none; color: #ab8984; cursor: pointer; font-size: 14px; }
+
+/* Responsive: collapse sidebar on small screens */
+@media (max-width: 1024px) {
+  #sidebar {
+    transform: translateX(-100%);
+    transition: transform 0.3s;
+  }
+  #sidebar.open { transform: translateX(0); }
+  .pl-sidebar-width-desktop { padding-left: 0 !important; }
+  header { left: 0 !important; }
+}
+
+/* Page transitions */
+.page { animation: fadeIn 0.3s ease; }
