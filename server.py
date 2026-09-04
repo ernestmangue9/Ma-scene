@@ -1,18 +1,22 @@
 import os
 import time
 import secrets
-import base64
+import unicodedata
 from urllib.parse import urlencode, quote
 from functools import wraps
+from concurrent.futures import ThreadPoolExecutor
 
 import requests
 from flask import Flask, redirect, request, jsonify, send_from_directory
 
+from dotenv import load_dotenv
+load_dotenv()
+
 app = Flask(__name__, static_folder="public")
 
 PORT = int(os.environ.get("PORT", 3000))
-SPOTIFY_CLIENT_ID = os.environ.get("SPOTIFY_CLIENT_ID", "")
-SPOTIFY_CLIENT_SECRET = os.environ.get("SPOTIFY_CLIENT_SECRET", "")
+DEEZER_APP_ID = os.environ.get("DEEZER_APP_ID", "")
+DEEZER_APP_SECRET = os.environ.get("DEEZER_APP_SECRET", "")
 REDIRECT_URI = os.environ.get("REDIRECT_URI", f"http://localhost:{PORT}/callback")
 BANDSINTOWN_APP_ID = os.environ.get("BANDSINTOWN_APP_ID", "concert-alert")
 USER_COUNTRY = os.environ.get("USER_COUNTRY", "France")
@@ -34,7 +38,6 @@ FRENCH_MAJOR_VENUES = [
 
 
 def normalize(s=""):
-    import unicodedata
     s = str(s).lower()
     s = unicodedata.normalize("NFD", s)
     s = "".join(c for c in s if unicodedata.category(c) != "Mn")
@@ -71,21 +74,16 @@ def artist_matches(name, event):
     return any(n in a.split() for a in attrs)
 
 
-# ─── SPOTIFY AUTH ───
+# ─── DEEZER AUTH ───
 
 @app.route("/login")
 def login():
-    state = secrets.token_hex(16)
-    scope = "playlist-read-private playlist-read-collaborative user-read-private user-read-email user-top-read user-read-recently-played"
     params = urlencode({
-        "response_type": "code",
-        "client_id": SPOTIFY_CLIENT_ID,
-        "scope": scope,
+        "app_id": DEEZER_APP_ID,
         "redirect_uri": REDIRECT_URI,
-        "state": state,
-        "show_dialog": "true",
+        "perms": "basic_access,playlist_access_library,email",
     })
-    return redirect(f"https://accounts.spotify.com/authorize?{params}")
+    return redirect(f"https://connect.deezer.com/oauth/auth.php?{params}")
 
 
 @app.route("/callback")
@@ -94,35 +92,35 @@ def callback():
     if not code:
         return redirect("/?error=auth_denied")
     try:
-        auth = base64.b64encode(f"{SPOTIFY_CLIENT_ID}:{SPOTIFY_CLIENT_SECRET}".encode()).decode()
-        resp = requests.post(
-            "https://accounts.spotify.com/api/token",
-            data={
-                "grant_type": "authorization_code",
+        resp = requests.get(
+            "https://connect.deezer.com/oauth/access_token.php",
+            params={
+                "app_id": DEEZER_APP_ID,
+                "secret": DEEZER_APP_SECRET,
                 "code": code,
-                "redirect_uri": REDIRECT_URI,
-            },
-            headers={
-                "Authorization": f"Basic {auth}",
-                "Content-Type": "application/x-www-form-urlencoded",
             },
             timeout=10,
         )
-        data = resp.json()
-        access_token = data["access_token"]
-        refresh_token = data.get("refresh_token", "")
-        expires_in = data.get("expires_in", 3600)
-        state = request.args.get("state", "")
-        user_sessions[state] = {
-            "access_token": access_token,
-            "refresh_token": refresh_token,
-            "expires_in": expires_in,
-            "created": time.time(),
-        }
+        # Deezer returns URL-encoded string: access_token=...&expires=...
+        data = dict(item.split("=") for item in resp.text.split("&") if "=" in item)
+        access_token = data.get("access_token", "")
+        if not access_token:
+            return redirect("/?error=token_failed")
+        user_sessions[access_token] = {"created": time.time()}
         return redirect(f"/?token={quote(access_token)}#authenticated")
     except Exception as e:
         print(f"Auth callback error: {e}")
         return redirect("/?error=token_failed")
+
+
+# ─── DEEZER API HELPERS ───
+
+def deezer_get(url, token, params=None):
+    if params is None:
+        params = {}
+    params["access_token"] = token
+    resp = requests.get(url, params=params, timeout=15)
+    return resp.json()
 
 
 # ─── API ROUTES ───
@@ -133,24 +131,19 @@ def api_playlists():
     if not token:
         return jsonify({"error": "No token provided"}), 401
     try:
+        data = deezer_get("https://api.deezer.com/user/me/playlists", token)
         playlists = []
-        url = "https://api.spotify.com/v1/me/playlists?limit=50"
-        while url:
-            resp = requests.get(url, headers={"Authorization": f"Bearer {token}"}, timeout=10)
-            data = resp.json()
-            items = data.get("items", [])
-            for p in items:
-                playlists.append({
-                    "id": p["id"],
-                    "name": p["name"],
-                    "image": (p.get("images") or [{}])[0].get("url") if p.get("images") else None,
-                    "trackCount": p.get("tracks", {}).get("total", 0),
-                    "owner": p.get("owner", {}).get("display_name", ""),
-                })
-            url = data.get("next")
+        for p in data.get("data", []):
+            playlists.append({
+                "id": p["id"],
+                "name": p["title"],
+                "image": p.get("picture_big") or p.get("picture_medium") or p.get("picture"),
+                "trackCount": p.get("nb_tracks", 0),
+                "owner": p.get("creator", {}).get("name", ""),
+            })
         return jsonify({"playlists": playlists})
     except Exception as e:
-        print(f"Spotify error /api/playlists: {e}")
+        print(f"Deezer error /api/playlists: {e}")
         return jsonify({"error": "Failed to fetch playlists"}), 500
 
 
@@ -165,74 +158,78 @@ def api_my_artists():
     def add_artist(artist_id, name, source):
         if not name:
             return
-        key = artist_id or name
+        key = str(artist_id) if artist_id else name
         if key not in artist_map:
             artist_map[key] = {"id": artist_id, "name": name, "sources": set()}
         artist_map[key]["sources"].add(source)
 
     # 1) Artists from playlists
     try:
-        url = "https://api.spotify.com/v1/me/playlists?limit=50"
-        while url:
-            pl_res = requests.get(url, headers={"Authorization": f"Bearer {token}"}, timeout=10)
-            playlists = pl_res.json().get("items", [])
+        page = 0
+        while True:
+            data = deezer_get("https://api.deezer.com/user/me/playlists", token, {"limit": 50, "index": page * 50})
+            playlists = data.get("data", [])
+            if not playlists:
+                break
             for pl in playlists:
-                t_url = f"https://api.spotify.com/v1/playlists/{pl['id']}/tracks?limit=100"
                 try:
-                    while t_url:
-                        tr_res = requests.get(t_url, headers={"Authorization": f"Bearer {token}"}, timeout=10)
-                        for item in tr_res.json().get("items", []):
-                            track = item.get("track")
-                            if not track or not track.get("artists"):
-                                continue
-                            for a in track["artists"]:
-                                add_artist(a.get("id"), a.get("name"), "playlist")
-                        t_url = tr_res.json().get("next")
+                    t_page = 0
+                    while True:
+                        tr_data = deezer_get(f"https://api.deezer.com/playlist/{pl['id']}/tracks", token, {"limit": 100, "index": t_page * 100})
+                        tracks = tr_data.get("data", [])
+                        if not tracks:
+                            break
+                        for track in tracks:
+                            for a in track.get("artist", []):
+                                if isinstance(a, dict):
+                                    add_artist(a.get("id"), a.get("name"), "playlist")
+                                elif isinstance(a, str):
+                                    add_artist(None, a, "playlist")
+                        if not tr_data.get("next"):
+                            break
+                        t_page += 1
                 except Exception as e:
-                    print(f"Playlist tracks error for {pl.get('name')}: {e}")
-            url = pl_res.json().get("next")
+                    print(f"Playlist tracks error for {pl.get('title')}: {e}")
+            if not data.get("next"):
+                break
+            page += 1
     except Exception as e:
         print(f"Error fetching playlists: {e}")
 
-    # 2) Top artists
-    top_artists = []
+    # 2) Favorite tracks (user's liked songs)
     try:
-        top = requests.get(
-            "https://api.spotify.com/v1/me/top/artists?limit=50&time_range=medium_term",
-            headers={"Authorization": f"Bearer {token}"},
-            timeout=10,
-        )
-        top_artists = top.json().get("items", [])
-        for a in top_artists:
-            add_artist(a.get("id"), a.get("name"), "top")
+        f_page = 0
+        while True:
+            fav_data = deezer_get("https://api.deezer.com/user/me/tracks", token, {"limit": 50, "index": f_page * 50})
+            favs = fav_data.get("data", [])
+            if not favs:
+                break
+            for fav in favs:
+                artist = fav.get("artist", {})
+                if isinstance(artist, dict):
+                    add_artist(artist.get("id"), artist.get("name"), "favorites")
+            if not fav_data.get("next"):
+                break
+            f_page += 1
     except Exception as e:
-        print(f"Error fetching top artists: {e}")
+        print(f"Error fetching favorites: {e}")
 
-    # 3) Enrich with popularity
-    ids = [k for k in artist_map.keys() if k]
-    pop_map = {}
-    for a in top_artists:
-        if a.get("popularity") is not None:
-            pop_map[a["id"]] = a["popularity"]
-    try:
-        for i in range(0, len(ids), 50):
-            batch = ids[i:i + 50]
-            lookup = requests.get(
-                f"https://api.spotify.com/v1/artists?ids={','.join(batch)}",
-                headers={"Authorization": f"Bearer {token}"},
-                timeout=10,
-            )
-            for a in lookup.json().get("artists", []):
-                if a and a.get("popularity") is not None:
-                    pop_map[a["id"]] = a["popularity"]
-    except Exception as e:
-        print(f"Error fetching artist popularity: {e}")
+    # 3) Enrich with popularity (from artist page)
+    for key, val in artist_map.items():
+        if val["id"]:
+            try:
+                artist_data = deezer_get(f"https://api.deezer.com/artist/{val['id']}", token)
+                val["popularity"] = artist_data.get("nb_fan", 0)
+            except Exception:
+                val["popularity"] = 0
+        else:
+            val["popularity"] = 0
 
     artists = [
         {
             "id": v["id"],
             "name": v["name"],
-            "popularity": pop_map.get(v["id"], 0),
+            "popularity": v.get("popularity", 0),
             "sources": list(v["sources"]),
         }
         for v in artist_map.values()
@@ -365,8 +362,7 @@ def get_venue_capacity(venue_name, city):
 
 
 def search_concerts_for_artist(artist_name):
-    import concurrent.futures
-    with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
+    with ThreadPoolExecutor(max_workers=2) as executor:
         f_tm = executor.submit(search_ticketmaster, artist_name)
         f_bit = executor.submit(search_bandsintown, artist_name)
         tm = f_tm.result()
@@ -456,6 +452,6 @@ if __name__ == "__main__":
     print(f"\nMa Scene running at http://localhost:{PORT}")
     print(f"Monitoring concerts in: {USER_CITY}, {USER_COUNTRY}")
     print(f"\n1. Go to http://localhost:{PORT}")
-    print(f"2. Log in with Spotify")
+    print(f"2. Log in with Deezer")
     print(f"3. Watch your artists' next concerts!\n")
     app.run(host="0.0.0.0", port=PORT, debug=True)

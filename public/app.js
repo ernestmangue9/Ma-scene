@@ -9,7 +9,7 @@ let currentPage = 'home';
   const params = new URLSearchParams(window.location.search);
   const token = params.get('token');
   if (token) {
-    autoSearchFromSpotify(token);
+    autoSearchFromDeezer(token);
     window.history.replaceState({}, '', '/');
   }
 
@@ -51,9 +51,9 @@ function navigateTo(page) {
   if (page === 'favorites') renderFavorites();
 }
 
-// ─── SPOTIFY AUTO-SEARCH ───
+// ─── DEEZER AUTO-SEARCH ───
 
-async function autoSearchFromSpotify(token) {
+async function autoSearchFromDeezer(token) {
   try {
     const res = await fetch(`/api/my-artists?token=${encodeURIComponent(token)}`);
     const data = await res.json();
@@ -62,7 +62,7 @@ async function autoSearchFromSpotify(token) {
       renderTags();
       updateSearchButton();
       navigateTo('artists');
-      showToast(`${artistList.length} artistes importés depuis Spotify`);
+      showToast(`${artistList.length} artistes import\u00e9s depuis Deezer`);
       await searchAllConcerts();
     } else {
       showToast('Aucun artiste trouvé. Connecte au moins une playlist.');
