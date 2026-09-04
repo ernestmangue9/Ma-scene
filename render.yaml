@@ -1,9 +1,9 @@
 services:
   - type: web
-    name: concert-alert
-    runtime: node
-    buildCommand: npm install
-    startCommand: node server.js
+    name: ma-scene
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn server:app
     autoDeploy: true
     envVars:
       - key: SPOTIFY_CLIENT_ID
@@ -16,5 +16,3 @@ services:
         value: France
       - key: USER_CITY
         value: Paris
-      - key: USE_HTTPS
-        value: "false"
