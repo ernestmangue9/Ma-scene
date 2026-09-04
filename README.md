@@ -1,4 +1,4 @@
-# 🎵 Concert Alert
+# 🎵 Ma Scène
 
 Alertes automatiques de concerts basées sur tes playlists Spotify.
 
