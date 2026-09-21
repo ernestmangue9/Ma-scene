@@ -135,6 +135,70 @@ function updateSearchButton() {
   if (btn) btn.style.opacity = artistList.length === 0 ? '0.5' : '1';
 }
 
+// ─── PLAYLIST IMPORT (DEEZER LINK) ───
+
+async function importFromPlaylistLink() {
+  const input = document.getElementById('playlist-link-input');
+  const btn = document.getElementById('btn-import-playlist');
+  await doImportPlaylist(input.value.trim(), btn);
+}
+
+async function importFromPlaylistLinkSettings() {
+  const input = document.getElementById('playlist-link-input-settings');
+  const btn = event.currentTarget;
+  const ok = await doImportPlaylist(input.value.trim(), btn);
+  input.value = '';
+}
+
+async function doImportPlaylist(link, btn) {
+  if (!link) {
+    showToast('Colle un lien de playlist Deezer');
+    return false;
+  }
+
+  if (btn) {
+    btn.disabled = true;
+    const original = btn.innerHTML;
+    btn.innerHTML = 'Chargement...';
+
+    try {
+      const res = await fetch(`/api/playlist?link=${encodeURIComponent(link)}`);
+      const data = await res.json();
+      if (!res.ok || !data.artists) {
+        showToast(data.error || 'Impossible de lire la playlist');
+        return false;
+      }
+
+      const added = data.artists.map(a => a.name);
+      let newCount = 0;
+      for (const name of added) {
+        if (!artistList.some(a => a.toLowerCase() === name.toLowerCase())) {
+          artistList.push(name);
+          newCount++;
+        }
+      }
+
+      renderTags();
+      updateSearchButton();
+
+      if (newCount > 0) {
+        showToast(`${newCount} artiste${newCount > 1 ? 's' : ''} import\u00e9${newCount > 1 ? 's' : ''} depuis la playlist`);
+      } else {
+        showToast('Aucun nouvel artiste (d\u00e9j\u00e0 dans la liste)');
+      }
+      navigateTo('artists');
+      return true;
+    } catch (err) {
+      console.error('Playlist import error:', err);
+      showToast('Erreur de connexion');
+      return false;
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = original;
+    }
+  }
+}
+
 // ─── CONCERT SEARCH ───
 
 async function searchAllConcerts() {

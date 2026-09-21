@@ -125,6 +125,106 @@ def deezer_get(url, token, params=None):
 
 # ─── API ROUTES ───
 
+def extract_playlist_id(value):
+    """Extract a Deezer playlist id from a URL or a plain id."""
+    value = value.strip()
+    if not value:
+        return None
+    if value.isdigit():
+        return value
+    base = "https://api.deezer.com/playlist/"
+    idx = value.find(base)
+    if idx >= 0:
+        rest = value[idx + len(base):]
+    else:
+        idx = value.find("deezer.com/playlist/")
+        if idx >= 0:
+            rest = value[idx + len("deezer.com/playlist/"):]
+        else:
+            idx = value.find("deezer.com/fr/playlist/")
+            if idx < 0:
+                idx = value.find("deezer.com/us/playlist/")
+            if idx < 0:
+                return None
+            prefix_len = len("deezer.com/fr/playlist/") if "deezer.com/fr/playlist/" in value else len("deezer.com/us/playlist/")
+            rest = value[idx + prefix_len:]
+    return rest.split("/")[0].split("?")[0] or None
+
+
+@app.route("/api/playlist")
+def api_playlist():
+    link = request.args.get("link", "").strip()
+    if not link:
+        return jsonify({"error": "Missing playlist link"}), 400
+
+    playlist_id = extract_playlist_id(link)
+    if not playlist_id:
+        return jsonify({"error": "Invalid Deezer playlist link or id"}), 400
+
+    try:
+        info = requests.get(f"https://api.deezer.com/playlist/{playlist_id}", timeout=15).json()
+    except Exception as e:
+        print(f"Deezer error /api/playlist info: {e}")
+        return jsonify({"error": "Failed to fetch playlist"}), 502
+
+    if "error" in info or "id" not in info:
+        return jsonify({"error": "Playlist not found or private"}), 404
+
+    title = info.get("title", "Playlist")
+    picture = info.get("picture_big") or info.get("picture_medium") or info.get("picture", "")
+
+    artist_map = {}
+
+    def add_artist(artist_id, name):
+        if not name:
+            return
+        key = str(artist_id) if artist_id else name
+        if key not in artist_map:
+            artist_map[key] = {"id": artist_id, "name": name}
+        artist_map[key]["count"] = artist_map[key].get("count", 0) + 1
+
+    page = 0
+    while True:
+        try:
+            tr_data = requests.get(
+                f"https://api.deezer.com/playlist/{playlist_id}/tracks",
+                params={"limit": 100, "index": page * 100},
+                timeout=15,
+            ).json()
+        except Exception as e:
+            print(f"Deezer error /api/playlist tracks page {page}: {e}")
+            break
+
+        tracks = tr_data.get("data", [])
+        if not tracks:
+            break
+        for track in tracks:
+            artist = track.get("artist", {})
+            if isinstance(artist, dict):
+                add_artist(artist.get("id"), artist.get("name"))
+            elif isinstance(artist, str):
+                add_artist(None, artist)
+
+        if not tr_data.get("next"):
+            break
+        page += 1
+
+    artists = sorted(
+        [{"id": v["id"], "name": v["name"], "trackCount": v["count"]} for v in artist_map.values()],
+        key=lambda x: x["trackCount"],
+        reverse=True,
+    )
+
+    return jsonify({
+        "id": playlist_id,
+        "name": title,
+        "image": picture,
+        "trackCount": info.get("nb_tracks", len(artists)),
+        "artists": artists,
+        "totalArtists": len(artists),
+    })
+
+
 @app.route("/api/playlists")
 def api_playlists():
     token = request.args.get("token")
