@@ -295,14 +295,15 @@ function renderConcerts(concerts) {
 }
 
 function createConcertCard(c) {
-  const date = new Date(c.date);
-  const day = date.getDate();
-  const month = date.toLocaleDateString('fr-FR', { month: 'short' });
-  const year = date.getFullYear();
-  const fullDate = date.toLocaleDateString('fr-FR', {
-    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
-  });
-  const hourStr = c.date.includes('T')
+  const hasDate = c.date && !isNaN(new Date(c.date).getTime());
+  const date = hasDate ? new Date(c.date) : null;
+  const day = date ? date.getDate() : '?';
+  const month = date ? date.toLocaleDateString('fr-FR', { month: 'short' }) : '';
+  const year = date ? date.getFullYear() : '';
+  const fullDate = hasDate
+    ? date.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
+    : 'Date \u00e0 confirmer';
+  const hourStr = hasDate && c.date.includes('T')
     ? date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
     : '';
   const location = [c.city, c.country].filter(Boolean).join(', ');

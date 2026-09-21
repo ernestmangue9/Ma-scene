@@ -443,6 +443,117 @@ def search_bandsintown(artist_name):
         return []
 
 
+MB_USER_AGENT = "MaScene/1.0 (https://github.com/ernestmangue9/Ma-scene)"
+
+
+def search_musicbrainz(artist_name):
+    """Search MusicBrainz (free, no API key) for upcoming events for an artist."""
+    try:
+        headers = {"User-Agent": MB_USER_AGENT}
+        today = time.strftime("%Y-%m-%d")
+
+        ar = requests.get(
+            "https://musicbrainz.org/ws/2/artist",
+            params={"query": f'artist:"{artist_name}"', "limit": 5, "fmt": "json"},
+            headers=headers,
+            timeout=15,
+        )
+        artists = ar.json().get("artists", [])
+        if not artists:
+            return []
+        aid = artists[0]["id"]
+
+        ev = requests.get(
+            "https://musicbrainz.org/ws/2/event",
+            params={"query": f'artist:"{artist_name}"', "limit": 100, "fmt": "json"},
+            headers=headers,
+            timeout=15,
+        )
+        events = ev.json().get("events", [])
+
+        results = []
+        for e in events:
+            place = None
+            for rel in e.get("relations", []):
+                if rel.get("type") == "held at" and isinstance(rel.get("place"), dict):
+                    place = rel["place"]
+                    break
+
+            vname = (place or {}).get("name", "")
+            city = ""
+            area = (place or {}).get("area") if place else None
+            if isinstance(area, dict) and area.get("name"):
+                city = area["name"]
+            if not city:
+                for ae in (place or {}).get("addresses", []) or []:
+                    if ae.get("type") == "City":
+                        city = ae["name"]
+                        break
+
+            name = e.get("name", "")
+            venue_name = vname or (name if name else "")
+            if not venue_name:
+                continue
+            results.append({
+                "artist": artist_name,
+                "date": "",
+                "venue": venue_name,
+                "city": city,
+                "country": "",
+                "region": "",
+                "latitude": None,
+                "longitude": None,
+                "ticketUrl": "",
+                "ticketType": "",
+                "lineup": [artist_name],
+                "source": "MusicBrainz",
+                "musicBrainz": True,
+            })
+        return results
+    except Exception as e:
+        print(f"MusicBrainz error for {artist_name}: {e}")
+        return []
+
+
+def search_gigwhere_trending(city=None, country=None):
+    """Fetch trending concerts from GigWhere free endpoints (no API key)."""
+    try:
+        params = {"limit": 12}
+        if city:
+            params["city"] = city
+        resp = requests.get(
+            "https://gigwhere.com/api/v1/gigs/trending",
+            params=params,
+            headers={"Accept": "application/json"},
+            timeout=10,
+        )
+        if resp.status_code != 200:
+            return []
+        items = resp.json().get("items", [])
+        results = []
+        for g in items:
+            gcity = g.get("city", "")
+            gcountry = g.get("country") or g.get("country_code") or ""
+            results.append({
+                "artist": g.get("artist") or g.get("title") or "Various",
+                "date": g.get("date", ""),
+                "venue": g.get("venue_name", "Unknown venue"),
+                "city": gcity,
+                "country": gcountry,
+                "region": g.get("region") or "",
+                "latitude": None,
+                "longitude": None,
+                "ticketUrl": g.get("ticket_url") or "",
+                "ticketType": g.get("source") or "",
+                "lineup": [g.get("artist") or g.get("title", "")],
+                "source": "GigWhere",
+            })
+        return results
+    except Exception as e:
+        print(f"GigWhere error: {e}")
+        return []
+
+
 def get_venue_capacity(venue_name, city):
     if not SONGKICK_API_KEY:
         return None
@@ -462,18 +573,20 @@ def get_venue_capacity(venue_name, city):
 
 
 def search_concerts_for_artist(artist_name):
-    with ThreadPoolExecutor(max_workers=2) as executor:
+    with ThreadPoolExecutor(max_workers=3) as executor:
         f_tm = executor.submit(search_ticketmaster, artist_name)
         f_bit = executor.submit(search_bandsintown, artist_name)
+        f_mb = executor.submit(search_musicbrainz, artist_name)
         tm = f_tm.result()
         bit = f_bit.result()
+        mb = f_mb.result()
 
-    combined = tm + bit
+    combined = tm + bit + mb
 
     seen = set()
     unique = []
     for c in combined:
-        key = f"{c['date']}-{normalize(c['venue'])}"
+        key = f"{c['date']}-{normalize(c['venue'])}-{c['source']}"
         if key in seen:
             continue
         seen.add(key)
@@ -490,7 +603,10 @@ def search_concerts_for_artist(artist_name):
     for c in unique:
         c["isFrance"] = is_major_french_venue(c["venue"], c["country"])
 
-    unique.sort(key=lambda x: (not x["isFrance"], x.get("date", "")))
+    def _no_date(c):
+        return not c.get("date")
+
+    unique.sort(key=lambda x: (not x["isFrance"], _no_date(x), x.get("date", "")))
     return unique
 
 
